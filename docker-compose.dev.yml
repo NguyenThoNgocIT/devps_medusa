@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: medusa
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa
+    ports:
+      - 5433:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - 6380:6379
+
+  medusa:
+    build:
+      context: ./my-medusa-store
+      dockerfile: Dockerfile
+    env_file:
+      - ./my-medusa-store/.env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - 9000:9000
+    volumes:
+      - ./my-medusa-store:/usr/src/app:delegated
+      - medusa_node_modules:/usr/src/app/node_modules
+  # package.json defines "dev": "medusa develop" - use yarn dev
+    command: yarn dev
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - 9090:9090
+
+  grafana:
+    image: grafana/grafana:9.0.0
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+  
+volumes:
+  pgdata:
+  grafana-data:
+  medusa_node_modules:
