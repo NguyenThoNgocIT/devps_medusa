@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   postgres:
     image: postgres:15
@@ -10,6 +9,11 @@ services:
       - 5433:5432
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
   redis:
     image: redis:7
@@ -28,10 +32,22 @@ services:
     ports:
       - 9000:9000
     volumes:
-      - ./my-medusa-store:/usr/src/app:delegated
+      # Mount only source code, not node_modules to avoid native binding conflicts
+      - ./my-medusa-store/src:/usr/src/app/src:delegated
+      - ./my-medusa-store/medusa-config.ts:/usr/src/app/medusa-config.ts:delegated
+      - ./my-medusa-store/medusa-config.js:/usr/src/app/medusa-config.js:delegated
+      - ./my-medusa-store/.env:/usr/src/app/.env:delegated
+      - ./my-medusa-store/tsconfig.json:/usr/src/app/tsconfig.json:delegated
+      # Do NOT mount instrumentation files - let them be copied from image to avoid encoding issues
+      # Keep node_modules inside container to avoid native binding issues
       - medusa_node_modules:/usr/src/app/node_modules
-  # package.json defines "dev": "medusa develop" - use yarn dev
+    # package.json defines "dev": "medusa develop" - use yarn dev
     command: yarn dev
+    environment:
+      # Override DATABASE_URL for container networking: use the postgres service hostname
+      DATABASE_URL: "postgres://medusa:medusa@postgres:5432/medusa?sslmode=disable"
+      # Use redis service hostname
+      REDIS_URL: "redis://redis:6379"
 
   prometheus:
     image: prom/prometheus:latest

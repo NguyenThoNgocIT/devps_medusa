@@ -1,3 +1,57 @@
+# my-medusa-store (backend)
+
+This README covers local development using Docker Compose, migrating an existing Postgres database into the container Postgres, and seeding demo data.
+
+Prerequisites
+
+- Docker & Docker Compose
+- (Optional) `psql`/`pg_dump` on Windows when exporting from host Postgres
+
+Quick start (use the included docker-compose.dev.yml)
+
+1. Copy `.env.example` to `.env` and adjust secrets if desired.
+
+2. Start services:
+
+```powershell
+docker compose -f ..\docker-compose.dev.yml up -d --build
+```
+
+3. Seed demo data:
+
+```powershell
+docker compose -f ..\docker-compose.dev.yml exec medusa yarn seed
+```
+
+Migrate existing Windows Postgres into the container Postgres
+
+If you previously created a Postgres DB on Windows and want to copy data into the container DB, follow these steps.
+
+1. On Windows, create a dump using `pg_dump` (plain SQL) or custom format (`-F c`). Example:
+
+```powershell
+# Plain SQL
+pg_dump -h localhost -p 5432 -U postgres -d medusa-devops -F p -f C:\temp\medusa_dump.sql
+
+# Or custom format
+pg_dump -h localhost -p 5432 -U postgres -d medusa-devops -F c -b -v -f C:\temp\medusa_dump.dump
+```
+
+2. Run the helper script in repository root (Windows PowerShell):
+
+```powershell
+# from repository root (D:\MEDUSA)
+./scripts/migrate_to_container.ps1 -DumpPath C:\temp\medusa_dump.sql -Format sql
+# or for custom format
+./scripts/migrate_to_container.ps1 -DumpPath C:\temp\medusa_dump.dump -Format custom
+```
+
+The script copies the dump into the `postgres` container and restores it into the `medusa` database.
+
+Notes
+
+- The compose setup creates a DB `medusa` with user `medusa` and password `medusa`. The `.env` file in this repo is set to use that DB for local development.
+- Do NOT commit real secrets to git. Use `.env.example` to document required variables.
 <p align="center">
   <a href="https://www.medusajs.com">
   <picture>
@@ -34,7 +88,7 @@
 
 ## Compatibility
 
-This starter is compatible with versions >= 2 of `@medusajs/medusa`. 
+This starter is compatible with versions >= 2 of `@medusajs/medusa`.
 
 ## Getting Started
 
