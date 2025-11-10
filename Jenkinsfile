@@ -2,8 +2,8 @@ pipeline {
 	agent any
 	environment {
 		IMAGE_NAME = "my-medusa-backend"
-		REGISTRY = "<ACR_NAME>.azurecr.io" // replace with your ACR login server
-		RESOURCE_GROUP = "<RG>" // replace with your resource group
+		REGISTRY = "medusaregistry.azurecr.io"
+		RESOURCE_GROUP = "medusa-rg"
 		ACI_NAME = "medusa-backend-aci"
 	}
 	stages {
@@ -15,10 +15,10 @@ pipeline {
 
 		stage('Install & Test') {
 			steps {
-				sh 'corepack enable || true'
-				sh 'yarn install --immutable --inline-builds'
+				sh 'cd my-medusa-store && corepack enable || true'
+				sh 'cd my-medusa-store && yarn install --immutable --inline-builds'
 				// Run tests (adjust scripts as needed)
-				sh 'yarn test:unit || true'
+				sh 'cd my-medusa-store && yarn test:unit || true'
 			}
 		}
 
@@ -34,7 +34,7 @@ pipeline {
 			steps {
 				// Provide ACR credentials in Jenkins (username/password) with id 'acr-credentials'
 				withCredentials([usernamePassword(credentialsId: 'acr-credentials', usernameVariable: 'ACR_USER', passwordVariable: 'ACR_PSW')]) {
-					sh "docker login ${env.REGISTRY} -u $ACR_USER -p $ACR_PSW"
+					sh "docker login ${env.REGISTRY} -u \$ACR_USER -p \$ACR_PSW"
 					sh "docker tag ${IMAGE_NAME}:$BUILD_NUMBER ${env.REGISTRY}/${IMAGE_NAME}:$BUILD_NUMBER"
 					sh "docker push ${env.REGISTRY}/${IMAGE_NAME}:$BUILD_NUMBER"
 				}
