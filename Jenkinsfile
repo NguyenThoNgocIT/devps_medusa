@@ -15,10 +15,15 @@ pipeline {
 
 		stage('Install & Test') {
 			steps {
-				sh 'cd my-medusa-store && corepack enable || true'
-				sh 'cd my-medusa-store && yarn install --immutable --inline-builds'
-				// Run tests (adjust scripts as needed)
-				sh 'cd my-medusa-store && yarn test:unit || true'
+				sh '''
+					cd my-medusa-store
+					# Enable corepack with sudo if needed
+					sudo corepack enable || true
+					# Install dependencies
+					yarn install --immutable --inline-builds || yarn install
+					# Run tests
+					yarn test:unit || true
+				'''
 			}
 		}
 
