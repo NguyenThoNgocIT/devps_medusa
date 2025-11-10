@@ -52,6 +52,7 @@ pipeline {
 				// Also store AZ_TENANT_ID and AZ_SUBSCRIPTION_ID as Jenkins secret text or env vars
 				withCredentials([
 					usernamePassword(credentialsId: 'azure-sp-credentials', usernameVariable: 'AZ_CLIENT_ID', passwordVariable: 'AZ_CLIENT_SECRET'),
+					usernamePassword(credentialsId: 'acr-credentials', usernameVariable: 'ACR_USER', passwordVariable: 'ACR_PSW'),
 					string(credentialsId: 'azure-tenant-id', variable: 'AZ_TENANT_ID'),
 					string(credentialsId: 'azure-subscription-id', variable: 'AZ_SUBSCRIPTION_ID')
 				]) {
