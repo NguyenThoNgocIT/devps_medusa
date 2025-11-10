@@ -157,7 +157,7 @@ az acr credential show --name medusaregistry --query "passwords[0].value" -o tsv
 
 2. **Add webhook**
 
-   - **Payload URL**: `http://4.188.81.70:8080/github-webhook/`
+   - **Payload URL**: `http://20.193.132.187:8080/github-webhook/`
    - **Content type**: `application/json`
    - **Secret**: Leave empty (GitHub sẽ tự generate nếu cần)
    - **SSL verification**: ✅ Enable SSL verification (bình thường)
@@ -263,9 +263,10 @@ az keyvault secret list --vault-name medusa-vault
 1. **Tạo commit** để trigger pipeline
 
    ```bash
-   git add .
-   git commit -m "Update production environment variables"
-   git push origin main
+   
+git add JENKINS_SETUP_GUIDE.md
+git commit --amend --no-edit
+git push origin main --force-with-lease
    ```
 
 2. **Build Log** sẽ hiển thị:
@@ -276,7 +277,7 @@ az keyvault secret list --vault-name medusa-vault
    - ✅ Deploy lên Azure Container Instance
    - ✅ Verify health check
 
-3. **Monitor** tại http://4.188.81.70:8080/job/Medusa-Backend-CI-CD/
+3. **Monitor** tại http://20.193.132.187:8080/job/Medusa-Backend-CI-CD/
 
 ## 📋 Bước 9: Kiểm tra Deployment
 
