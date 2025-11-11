@@ -13,6 +13,7 @@ function requiredEnv(key) {
 module.exports = defineConfig({
   projectConfig: {
     databaseUrl: requiredEnv("DATABASE_URL"),
+    redisUrl: process.env.REDIS_URL,
     http: {
       storeCors: process.env.STORE_CORS || "",
       adminCors: process.env.ADMIN_CORS || "",
