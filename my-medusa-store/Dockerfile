@@ -28,7 +28,7 @@ WORKDIR /usr/src/app
 # Ensure CA certs are present
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=development
+ENV NODE_ENV=production
 
 # Copy built app and node_modules from builder
 COPY --from=builder /usr/src/app /usr/src/app
