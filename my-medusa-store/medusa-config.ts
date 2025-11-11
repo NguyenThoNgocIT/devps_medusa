@@ -12,5 +12,16 @@ module.exports = defineConfig({
       jwtSecret: process.env.JWT_SECRET || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     }
+  },
+  admin: {
+    vite: () => ({
+      server: {
+        allowedHosts: [
+          'medusa-backend.southeastasia.azurecontainer.io',
+          'localhost',
+          '127.0.0.1'
+        ]
+      }
+    })
   }
 })
