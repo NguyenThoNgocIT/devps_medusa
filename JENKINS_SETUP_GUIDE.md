@@ -278,7 +278,8 @@ git push origin main --force-with-lease
    - ✅ Verify health check
 
 3. **Monitor** tại http://20.193.132.187:8080/job/Medusa-Backend-CI-CD/
-
+sucesss----------------------------------------------------------------------------
+đăng kí
 ## 📋 Bước 9: Kiểm tra Deployment
 
 ```bash
