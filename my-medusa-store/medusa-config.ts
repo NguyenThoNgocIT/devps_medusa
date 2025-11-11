@@ -17,10 +17,7 @@ module.exports = defineConfig({
     backendUrl: process.env.BACKEND_URL || "http://localhost:9000",
     vite: () => ({
       server: {
-        host: "0.0.0.0",
-        strictPort: true,
-        middlewareMode: false,
-        hmr: false,  // Disable HMR to avoid host check issues
+        middlewareMode: true,  // Disable host check by using middleware mode
       }
     })
   }
