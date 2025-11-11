@@ -71,7 +71,11 @@ pipeline {
 							--dns-name-label medusa-backend \
 							--registry-login-server ${REGISTRY} \
 							--registry-username $ACR_USER --registry-password $ACR_PSW \
-							--environment-variables DATABASE_URL=\'$DATABASE_URL\' REDIS_URL=\'$REDIS_URL\' JWT_SECRET=\'$JWT_SECRET\' COOKIE_SECRET=\'$COOKIE_SECRET\' || true
+							--secure-environment-variables \
+								DATABASE_URL="postgresql://adminuser:nguyenthongoc!@medusa-db-server.postgres.database.azure.com:5432/medusa?sslmode=require" \
+								REDIS_URL="redis://20.193.132.187:6379" \
+								JWT_SECRET="pk_9a5ad44cf0a4d85672d9c3a4228badc684cf5a0a60d9fcf019af104f552bb8c9" \
+								COOKIE_SECRET="sk_f21420ab11b96a0024f884d793b84f378603184e932c15aaaef6a692a6cb8314" || true
 					'''
 				}
 			}
