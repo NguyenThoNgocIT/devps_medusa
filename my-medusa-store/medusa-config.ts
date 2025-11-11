@@ -14,6 +14,17 @@ module.exports = defineConfig({
     }
   },
   admin: {
-    backendUrl: process.env.BACKEND_URL || "http://localhost:9000"
+    backendUrl: process.env.BACKEND_URL || "http://localhost:9000",
+    vite: () => {
+      // Only use vite in development mode
+      if (process.env.NODE_ENV === 'production') {
+        return {};
+      }
+      return {
+        server: {
+          middlewareMode: true
+        }
+      };
+    }
   }
 })
