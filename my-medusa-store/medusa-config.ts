@@ -19,8 +19,11 @@ module.exports = defineConfig({
       server: {
         host: "0.0.0.0",
         strictPort: true,
+        middlewareMode: false,
+        allowedHosts: "all",
         hmr: {
-          clientPort: 9000
+          clientPort: 9000,
+          host: "medusa-backend.southeastasia.azurecontainer.io",
         }
       }
     })

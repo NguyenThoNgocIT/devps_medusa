@@ -28,7 +28,7 @@ WORKDIR /usr/src/app
 # Ensure CA certs are present
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 # Copy built app and node_modules from builder
 COPY --from=builder /usr/src/app /usr/src/app
@@ -38,5 +38,5 @@ RUN corepack enable && corepack prepare yarn@4.9.1 --activate || true
 
 EXPOSE 9000
 
-CMD ["yarn", "start"]
+CMD ["yarn", "dev"]
 
