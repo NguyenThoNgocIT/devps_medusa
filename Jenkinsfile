@@ -65,8 +65,10 @@ pipeline {
 							--resource-group ${RESOURCE_GROUP} \
 							--name ${ACI_NAME} \
 							--image ${REGISTRY}/${IMAGE_NAME}:$BUILD_NUMBER \
+							--os-type Linux \
 							--cpu 1 --memory 2 \
 							--ports 9000 \
+							--dns-name-label medusa-backend \
 							--registry-login-server ${REGISTRY} \
 							--registry-username $ACR_USER --registry-password $ACR_PSW \
 							--environment-variables DATABASE_URL=\'$DATABASE_URL\' REDIS_URL=\'$REDIS_URL\' JWT_SECRET=\'$JWT_SECRET\' COOKIE_SECRET=\'$COOKIE_SECRET\' || true
