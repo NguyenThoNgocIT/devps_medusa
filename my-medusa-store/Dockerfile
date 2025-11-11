@@ -38,5 +38,5 @@ RUN corepack enable && corepack prepare yarn@4.9.1 --activate || true
 
 EXPOSE 9000
 
-CMD ["yarn", "dev"]
+CMD ["yarn", "start"]
 
