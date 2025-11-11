@@ -16,11 +16,10 @@ module.exports = defineConfig({
   admin: {
     vite: () => ({
       server: {
-        allowedHosts: [
-          'medusa-backend.southeastasia.azurecontainer.io',
-          'localhost',
-          '127.0.0.1'
-        ]
+        host: true,
+        hmr: {
+          clientPort: 9000
+        }
       }
     })
   }
