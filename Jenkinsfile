@@ -84,7 +84,8 @@ pipeline {
 								ADMIN_CORS='http://medusa-backend.southeastasia.azurecontainer.io:9000' \
 								STORE_CORS='http://localhost:8000' \
 								AUTH_CORS='http://medusa-backend.southeastasia.azurecontainer.io:9000,http://localhost:8000' \
-								DANGEROUSLY_DISABLE_HOST_CHECK='true'
+								DANGEROUSLY_DISABLE_HOST_CHECK='true' \
+								VITE_ADMIN_BACKEND_URL='http://medusa-backend.southeastasia.azurecontainer.io:9000'
 					'''
 				}
 			}
