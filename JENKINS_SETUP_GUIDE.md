@@ -517,7 +517,7 @@ az postgres server firewall-rule list --resource-group medusa-rg --server-name m
 1. **Truy cập Jenkins Plugin Manager**
 
    ```
-   http://20.193.132.187:8080/manage/pluginManager/available
+   http://20.193.132.187:8080/manage/plugPrometheusinManager/available
    ```
 
 2. **Tìm và cài đặt plugin**
@@ -570,8 +570,7 @@ az postgres server firewall-rule list --resource-group medusa-rg --server-name m
 2. **Restart Prometheus**
 
    ```bash
-   docker restart prometheus
-
+  docker restart medusa-prometheus-1
    # Verify Prometheus đã nhận config mới
    docker logs prometheus --tail 20
    ```
