@@ -510,6 +510,174 @@ az postgres server firewall-rule list --resource-group medusa-rg --server-name m
 
 ---
 
+## 📋 Bước 11: Setup Monitoring với Prometheus & Grafana
+
+### 🎯 A. Cài đặt Prometheus Metrics Plugin cho Jenkins
+
+1. **Truy cập Jenkins Plugin Manager**
+
+   ```
+   http://20.193.132.187:8080/manage/pluginManager/available
+   ```
+
+2. **Tìm và cài đặt plugin**
+
+   - Search: `Prometheus`
+   - Chọn: **Prometheus metrics plugin**
+   - Click **Install without restart**
+   - Chờ cài đặt xong
+
+3. **Verify plugin đã cài**
+   - Truy cập: http://20.193.132.187:8080/prometheus/
+   - Nếu thấy metrics text → Plugin hoạt động ✅
+
+### 🎯 B. Cấu hình Prometheus scrape Jenkins metrics
+
+1. **Update Prometheus config**
+
+   ```bash
+   ssh vothecong@20.193.132.187
+
+   # Backup config cũ
+   cp /home/vothecong/prometheus/prometheus.yml /home/vothecong/prometheus/prometheus.yml.bak
+
+   # Update config
+   cat > /home/vothecong/prometheus/prometheus.yml << 'EOF'
+   global:
+     scrape_interval: 15s
+     evaluation_interval: 15s
+
+   scrape_configs:
+     - job_name: 'jenkins'
+       metrics_path: '/prometheus/'
+       static_configs:
+         - targets: ['localhost:8080']
+
+     - job_name: 'prometheus'
+       static_configs:
+         - targets: ['localhost:9090']
+
+     - job_name: 'redis'
+       static_configs:
+         - targets: ['localhost:6379']
+
+     - job_name: 'medusa-api'
+       static_configs:
+         - targets: ['medusa-backend.southeastasia.azurecontainer.io:9000']
+   EOF
+   ```
+
+2. **Restart Prometheus**
+
+   ```bash
+   docker restart prometheus
+
+   # Verify Prometheus đã nhận config mới
+   docker logs prometheus --tail 20
+   ```
+
+3. **Kiểm tra Targets trong Prometheus**
+   - Truy cập: http://20.193.132.187:9090
+   - Click **Status** → **Targets**
+   - Check Jenkins target: `http://localhost:8080/prometheus/` → Status: **UP** ✅
+
+### 🎯 C. Kết nối Grafana với Prometheus
+
+1. **Truy cập Grafana**
+
+   ```
+   http://20.193.132.187:3000
+   ```
+
+   - **Username**: `admin`
+   - **Password**: `admin`
+   - Đổi password mới khi được yêu cầu
+
+2. **Add Prometheus Data Source**
+
+   - Click **⚙️ Configuration** → **Data Sources**
+   - Click **Add data source**
+   - Chọn **Prometheus**
+
+   **Cấu hình:**
+
+   - **Name**: `Prometheus`
+   - **URL**: `http://prometheus:9090` (hoặc `http://localhost:9090`)
+   - **Access**: `Server (default)`
+   - Click **Save & test**
+   - Thấy "Data source is working" ✅
+
+3. **Import Jenkins Dashboard**
+
+   - Click **+** → **Import**
+   - **Import via grafana.com**: Nhập ID `9964`
+   - Click **Load**
+   - **Select Prometheus data source**: Chọn `Prometheus`
+   - Click **Import**
+
+4. **Explore Metrics**
+   - Dashboard sẽ hiển thị:
+     - Build duration
+     - Build success/failure rate
+     - Queue length
+     - Executor usage
+     - Job statistics
+
+### 🎯 D. Tạo Custom Dashboard cho Medusa API
+
+1. **Create New Dashboard**
+
+   - Click **+** → **Dashboard** → **Add new panel**
+
+2. **Panel 1: API Health Status**
+
+   ```promql
+   up{job="medusa-api"}
+   ```
+
+   - Visualization: **Stat**
+   - Title: "Medusa API Status"
+
+3. **Panel 2: Jenkins Build Success Rate**
+
+   ```promql
+   rate(jenkins_builds_success_build_count_total[5m]) /
+   rate(jenkins_builds_success_build_count_total[5m] + jenkins_builds_failed_build_count_total[5m])
+   ```
+
+   - Visualization: **Gauge**
+   - Title: "Build Success Rate"
+   - Unit: **Percent (0-1.0)**
+
+4. **Save Dashboard**
+   - Click **Save** (💾 icon)
+   - Name: "Medusa CI/CD Overview"
+
+### 🎯 E. Test End-to-End Monitoring
+
+1. **Trigger một build**
+
+   ```bash
+   echo "# Test monitoring" >> README.md
+   git add README.md
+   git commit -m "Test: Monitoring integration"
+   git push origin main
+   ```
+
+2. **Monitor trong Grafana**
+
+   - Refresh Jenkins Dashboard
+   - Xem build duration tăng
+   - Check build count metrics
+
+3. **Verify Alerts (Optional)**
+   - Grafana có thể setup alerts khi:
+     - Build fail > 3 lần liên tiếp
+     - Build duration > 10 phút
+     - API health check fail
+
+---
+
 ## ✅ Checklist
 
 - [ ] Azure Service Principal tạo xong
@@ -518,9 +686,24 @@ az postgres server firewall-rule list --resource-group medusa-rg --server-name m
 - [ ] Jenkins Credentials setup xong
 - [ ] Pipeline Job tạo xong
 - [ ] GitHub Webhook setup xong
-- [ ] Prometheus + Grafana chạy xong
+- [x] Prometheus + Grafana chạy xong
+- [x] Jenkins Prometheus plugin cài xong
+- [x] Grafana kết nối Prometheus thành công
+- [x] Dashboard hiển thị metrics
 - [ ] Test build đầu tiên thành công
 - [ ] Medusa API deploy lên Azure thành công
+
+---
+
+## 📊 URLs Tổng hợp (Demo cho Thầy)
+
+| Service             | URL                                                        | Mục đích                |
+| ------------------- | ---------------------------------------------------------- | ----------------------- |
+| **Jenkins**         | http://20.193.132.187:8080                                 | CI/CD Pipeline          |
+| **Prometheus**      | http://20.193.132.187:9090                                 | Metrics Collection      |
+| **Grafana**         | http://20.193.132.187:3000                                 | Visualization Dashboard |
+| **Jenkins Metrics** | http://20.193.132.187:8080/prometheus/                     | Raw metrics             |
+| **Medusa Backend**  | http://medusa-backend.southeastasia.azurecontainer.io:9000 | Production API          |
 
 ---
 
