@@ -263,19 +263,22 @@ az keyvault secret list --vault-name medusa-vault
 1. **Tạo commit** để trigger pipeline
 
    ```bash
-   
+
+   ```
+
 git add JENKINS_SETUP_GUIDE.md
 git commit --amend --no-edit
 git push origin main --force-with-lease
-   ```
+
+````
 
 2. **Build Log** sẽ hiển thị:
 
-   - ✅ Checkout code
-   - ✅ Build Docker image
-   - ✅ Push lên ACR
-   - ✅ Deploy lên Azure Container Instance
-   - ✅ Verify health check
+- ✅ Checkout code
+- ✅ Build Docker image
+- ✅ Push lên ACR
+- ✅ Deploy lên Azure Container Instance
+- ✅ Verify health check
 
 3. **Monitor** tại http://20.193.132.187:8080/job/Medusa-Backend-CI-CD/
 sucesss----------------------------------------------------------------------------
@@ -291,47 +294,160 @@ curl http://medusa-backend-aci.LOCATION.azurecontainers.io:9000/health
 
 # Xem logs
 az container logs --resource-group medusa-rg --name medusa-backend-aci
+````
+
+## 📋 Bước 10: Test và Verify Deployment (DEMO CHO THẦY)
+
+### 🎯 A. Kiểm tra Jenkins Pipeline
+
+1. **Truy cập Jenkins Dashboard**
+
+   ```
+   http://20.193.132.187:8080/job/Medusa-Backend-CI-CD/
+   ```
+
+2. **Xem Build History**
+
+   - Click vào build number mới nhất (VD: #37)
+   - Click **Console Output** để xem logs
+   - ✅ Check: "Finished: SUCCESS"
+
+3. **Verify GitHub Webhook hoạt động**
+
+   ```bash
+   # Tạo commit test
+   echo "# Demo for teacher" >> README.md
+   git add README.md
+   git commit -m "Test: Demo CI/CD auto-trigger"
+   git push origin main
+
+   # Jenkins sẽ tự động trigger build mới trong vòng 1-2 phút
+   ```
+
+### 🎯 B. Kiểm tra Azure Container Instance
+
+1. **Get Container Info**
+
+   ```bash
+   az container show \
+     --resource-group medusa-rg \
+     --name medusa-backend-aci \
+     --query "{FQDN:ipAddress.fqdn, IP:ipAddress.ip, State:instanceView.state}" \
+     --output table
+   ```
+
+2. **Xem Container Logs**
+
+   ```bash
+   az container logs --resource-group medusa-rg --name medusa-backend-aci
+   ```
+
+3. **Check Container Status**
+   ```bash
+   # Nếu container restart nhiều lần
+   az container show \
+     --resource-group medusa-rg \
+     --name medusa-backend-aci \
+     --query "containers[0].instanceView.restartCount"
+   ```
+
+### 🎯 C. Test API Endpoints
+
+1. **Health Check**
+
+   ```bash
+   curl http://medusa-backend.southeastasia.azurecontainer.io:9000/health
+   # Expected: {"status":"ok"}
+   ```
+
+2. **Store API - Get Products**
+
+   ```bash
+   curl http://medusa-backend.southeastasia.azurecontainer.io:9000/store/products
+   # Expected: JSON response với danh sách products
+   ```
+
+3. **Admin API - Get Regions**
+   ```bash
+   curl http://medusa-backend.southeastasia.azurecontainer.io:9000/admin/regions
+   # Expected: JSON response với regions
+   ```
+
+### 🎯 D. Test Admin UI (Nếu không bị 403)
+
+**Truy cập Admin Dashboard:**
+
+```
+http://medusa-backend.southeastasia.azurecontainer.io:9000/app
 ```
 
-## 📋 Bước 10: Cấu hình Prometheus + Grafana trên Jenkins VM
+**Nếu bị 403 Forbidden:**
+
+- Backend API vẫn hoạt động tốt (test ở bước C)
+- Đây là vấn đề Vite dev server host validation
+- **Solution for Demo**: Dùng API trực tiếp hoặc Postman để demo CRUD operations
+
+### 🎯 E. Demo Flow Cho Thầy
+
+**1. Thay đổi code**
 
 ```bash
-# SSH vào VM
-ssh -i your-key.pem azureuser@4.188.81.70
-
-# Tạo folder cho Prometheus config
-mkdir -p /home/azureuser/prometheus
-
-# Cấu hình Prometheus
-cat > /home/azureuser/prometheus/prometheus.yml << 'EOF'
-global:
-  scrape_interval: 15s
-
-scrape_configs:
-  - job_name: 'medusa-api'
-    static_configs:
-      - targets: ['medusa-backend-aci.LOCATION.azurecontainers.io:9000']
-
-  - job_name: 'jenkins'
-    static_configs:
-      - targets: ['localhost:8080']
-
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['localhost:6379']
-EOF
-
-# Chạy Prometheus
-docker run -d --name prometheus \
-  -p 9090:9090 \
-  -v /home/azureuser/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml \
-  prom/prometheus
-
-# Chạy Grafana
-docker run -d --name grafana \
-  -p 3000:3000 \
-  grafana/grafana
+# Sửa file bất kỳ
+echo "// Updated for demo" >> my-medusa-store/src/api/README.md
+git add .
+git commit -m "Demo: Trigger CI/CD pipeline"
+git push origin main
 ```
+
+**2. Xem tự động build**
+
+- Mở Jenkins: http://20.193.132.187:8080/job/Medusa-Backend-CI-CD/
+- Build mới xuất hiện tự động
+- Theo dõi Console Output
+
+**3. Verify deployment**
+
+```bash
+# Sau khi build xong, check container đã update
+az container show \
+  --resource-group medusa-rg \
+  --name medusa-backend-aci \
+  --query "containers[0].image"
+
+# Sẽ thấy image tag mới: medusaregistry.azurecr.io/my-medusa-backend:XX
+```
+
+**4. Test API sau khi deploy**
+
+```bash
+curl http://medusa-backend.southeastasia.azurecontainer.io:9000/health
+```
+
+### 🎯 F. Clean Up (Sau khi demo xong)
+
+```bash
+# Xóa container instance
+az container delete --resource-group medusa-rg --name medusa-backend-aci --yes
+
+# Xóa toàn bộ resource group (nếu không cần nữa)
+az group delete --name medusa-rg --yes --no-wait
+
+# Dọn dẹp Docker images trên Jenkins VM
+ssh vothecong@20.193.132.187 "docker system prune -a --volumes -f"
+```
+
+### 📊 Metrics Để Show Cho Thầy
+
+| Metric                 | Giá trị                                               |
+| ---------------------- | ----------------------------------------------------- |
+| **Total Builds**       | Check tại Jenkins dashboard                           |
+| **Success Rate**       | Số build thành công / tổng số build                   |
+| **Average Build Time** | ~5-8 phút                                             |
+| **Auto-deploy Time**   | < 2 phút sau push code                                |
+| **Container Uptime**   | Check: `az container show --query instanceView.state` |
+| **API Response Time**  | Test: `curl -w "@-" -o /dev/null -s http://...`       |
+
+---
 
 ## 🔒 Bảo mật - Best Practices
 
