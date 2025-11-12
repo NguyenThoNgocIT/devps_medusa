@@ -15,13 +15,19 @@ module.exports = defineConfig({
   },
   admin: {
     backendUrl: process.env.BACKEND_URL || "http://localhost:9000",
+    disable: false,
     vite: () => ({
       server: {
-        host: true,
+        host: '0.0.0.0',
+        port: 9000,
         strictPort: false,
-        allowedHosts: ["all", "*", ".azurecontainer.io"],
         hmr: false,
-        middlewareMode: false
+        origin: process.env.BACKEND_URL || 'http://localhost:9000',
+        proxy: {}
+      },
+      preview: {
+        host: '0.0.0.0',
+        port: 9000
       }
     })
   }
