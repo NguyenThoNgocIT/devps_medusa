@@ -38,6 +38,7 @@ RUN corepack enable && corepack prepare yarn@4.9.1 --activate || true
 
 EXPOSE 9000
 
-# Run production server (serves pre-built admin UI without Vite dev server)
-CMD ["yarn", "start"]
+# Use dev mode because production build requires DATABASE_URL at build time
+# Dev mode with host: 0.0.0.0 allows external connections
+CMD ["yarn", "dev"]
 
