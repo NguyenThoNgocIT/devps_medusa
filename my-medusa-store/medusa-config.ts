@@ -18,27 +18,18 @@ module.exports = defineConfig({
     disable: false,
     vite: () => ({
       server: {
-        host: true, // Listen on all network interfaces
+        host: '0.0.0.0',
         port: 9000,
         strictPort: false,
-        hmr: {
-          protocol: 'ws',
-          host: 'localhost',
-          clientPort: 9000
-        }
-      },
-      // Completely disable host check by overriding middleware
-      plugins: [
-        {
-          name: 'disable-host-check',
-          configureServer(server) {
-            server.middlewares.use((req, res, next) => {
-              // Allow all hosts
-              next();
-            });
-          }
-        }
-      ]
+        hmr: false,
+        // THE KEY FIX: Set allowedHosts to allow all hosts
+        allowedHosts: [
+          '.azurecontainer.io',
+          'medusa-backend.southeastasia.azurecontainer.io',
+          'localhost',
+          '.localhost'
+        ]
+      }
     })
   }
 })
